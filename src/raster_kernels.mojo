@@ -1,13 +1,11 @@
 """Raster resampling and fused band arithmetic behind the Python API."""
 
-from std.algorithm import parallelize
 from std.math import ceil, floor, isnan
 from std.sys.info import simd_width_of
 
 
 comptime F32Ptr = UnsafePointer[Float32, AnyOrigin[mut=True]]
 comptime F64Ptr = UnsafePointer[Float64, AnyOrigin[mut=True]]
-comptime PARALLEL_PIXELS = 131072
 
 
 def p32(addr: Int) -> F32Ptr:
@@ -312,11 +310,8 @@ def bilinear32(
         def work(task: Int):
             bilinear2_32_row(src, dst, sh, sw, dh, dw, task)
 
-        if bands * dh * dw >= PARALLEL_PIXELS:
-            parallelize[work](bands * dh, 36)
-        else:
-            for task in range(bands * dh):
-                work(task)
+        for task in range(bands * dh):
+            work(task)
         return
     var radius_y = max(Float64(wh) / Float64(dh), 1.0)
     var radius_x = max(Float64(ww) / Float64(dw), 1.0)
@@ -383,11 +378,8 @@ def bilinear64(
         def work(task: Int):
             bilinear2_64_row(src, dst, sh, sw, dh, dw, task)
 
-        if bands * dh * dw >= PARALLEL_PIXELS:
-            parallelize[work](bands * dh, 36)
-        else:
-            for task in range(bands * dh):
-                work(task)
+        for task in range(bands * dh):
+            work(task)
         return
     var radius_y = max(Float64(wh) / Float64(dh), 1.0)
     var radius_x = max(Float64(ww) / Float64(dw), 1.0)
@@ -515,11 +507,8 @@ def average32(
         def work(task: Int):
             average2_32_row(src, dst, sh, sw, dh, dw, task)
 
-        if bands * dh * dw >= PARALLEL_PIXELS:
-            parallelize[work](bands * dh, 36)
-        else:
-            for task in range(bands * dh):
-                work(task)
+        for task in range(bands * dh):
+            work(task)
         return
     for b in range(bands):
         for y in range(dh):
@@ -577,11 +566,8 @@ def average64(
         def work(task: Int):
             average2_64_row(src, dst, sh, sw, dh, dw, task)
 
-        if bands * dh * dw >= PARALLEL_PIXELS:
-            parallelize[work](bands * dh, 36)
-        else:
-            for task in range(bands * dh):
-                work(task)
+        for task in range(bands * dh):
+            work(task)
         return
     for b in range(bands):
         for y in range(dh):
