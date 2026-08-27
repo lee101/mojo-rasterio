@@ -41,11 +41,11 @@ def nearest2_32_row(
     var source_base = (b * sh + 2 * y + 1) * sw
     var dest_base = (b * dh + y) * dw
     var x = 0
-    while x + W // 2 <= dw:
-        var values = src.load[width=W](source_base + 2 * x)
+    while x + W <= dw:
+        var values = src.load[width=2 * W](source_base + 2 * x)
         var even, odd = values.deinterleave()
         dst.store(dest_base + x, odd)
-        x += W // 2
+        x += W
     while x < dw:
         dst[dest_base + x] = src[source_base + 2 * x + 1]
         x += 1
@@ -60,11 +60,11 @@ def nearest2_64_row(
     var source_base = (b * sh + 2 * y + 1) * sw
     var dest_base = (b * dh + y) * dw
     var x = 0
-    while x + W // 2 <= dw:
-        var values = src.load[width=W](source_base + 2 * x)
+    while x + W <= dw:
+        var values = src.load[width=2 * W](source_base + 2 * x)
         var even, odd = values.deinterleave()
         dst.store(dest_base + x, odd)
-        x += W // 2
+        x += W
     while x < dw:
         dst[dest_base + x] = src[source_base + 2 * x + 1]
         x += 1
@@ -75,12 +75,8 @@ def nearest32(
     row: Int, col: Int, wh: Int, ww: Int, dh: Int, dw: Int
 ):
     if row == 0 and col == 0 and wh == sh and ww == sw and sh == 2 * dh and sw == 2 * dw:
-        @parameter
-        def work(task: Int):
-            nearest2_32_row(src, dst, sh, sw, dh, dw, task)
-
         for task in range(bands * dh):
-            work(task)
+            nearest2_32_row(src, dst, sh, sw, dh, dw, task)
         return
     for b in range(bands):
         for y in range(dh):
@@ -97,12 +93,8 @@ def nearest64(
     row: Int, col: Int, wh: Int, ww: Int, dh: Int, dw: Int
 ):
     if row == 0 and col == 0 and wh == sh and ww == sw and sh == 2 * dh and sw == 2 * dw:
-        @parameter
-        def work(task: Int):
-            nearest2_64_row(src, dst, sh, sw, dh, dw, task)
-
         for task in range(bands * dh):
-            work(task)
+            nearest2_64_row(src, dst, sh, sw, dh, dw, task)
         return
     for b in range(bands):
         for y in range(dh):

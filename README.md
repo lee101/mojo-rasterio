@@ -95,18 +95,22 @@ below `1.00x` means the Mojo implementation is slower.
 
 | Kernel | Mojo | Reference | Speedup | Compared with |
 |---|---:|---:|---:|---|
-| nearest 3x2048x2048 -> 1024x1024 | 8.40 ms | 8.47 ms | 1.01x | Rasterio 1.5 / GDAL |
-| bilinear 3x2048x2048 -> 1024x1024 | 12.72 ms | 102.85 ms | 8.09x | Rasterio 1.5 / GDAL |
-| average 3x2048x2048 -> 1024x1024 | 15.07 ms | 21.17 ms | 1.41x | Rasterio 1.5 / GDAL |
-| normalized difference 2048x2048 | 6.96 ms | 37.92 ms | 5.45x | NumPy |
-| linear combination 3x2048x2048 | 9.88 ms | 48.36 ms | 4.89x | NumPy expression |
+| nearest 3x2048x2048 -> 1024x1024 | 3.20 ms | 3.31 ms | 1.03x | Rasterio 1.5 / GDAL |
+| bilinear 3x2048x2048 -> 1024x1024 | 40.23 ms | 83.79 ms | 2.08x | Rasterio 1.5 / GDAL |
+| average 3x2048x2048 -> 1024x1024 | 7.76 ms | 17.07 ms | 2.20x | Rasterio 1.5 / GDAL |
+| normalized difference 2048x2048 | 7.35 ms | 18.68 ms | 2.54x | NumPy |
+| linear combination 3x2048x2048 | 8.55 ms | 20.13 ms | 2.36x | NumPy expression |
 
 The fused band operations win because they allocate one output and traverse
-each input once. Exact 2x downsampling uses native-width SIMD loads with scalar
-tails. Bilinear and average split sufficiently large outputs across CPU workers;
-smaller reads remain serial to avoid thread-launch overhead.
+each input once. Exact 2x downsampling uses native-width SIMD results with
+scalar tails. The nearest kernel loads two SIMD widths at a time, deinterleaves
+them, and writes a full-width result. CPU parallelism was measured for the large
+nearest case but was slower than the serial SIMD loop because thread scheduling
+and synchronization outweighed the work.
 
-No GPU path is included. The benchmark covers only the CPU implementation.
+No GPU path is included. The covered kernels are below the roughly 2 flops per
+byte threshold where transfer and launch overhead can pay off, so the benchmark
+covers only the CPU implementation.
 
 ## How it works
 
